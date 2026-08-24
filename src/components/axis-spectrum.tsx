@@ -1,7 +1,6 @@
 "use client";
 
-import type { AxisDef, Archetype } from "@/lib/interface-map";
-import { zoneOf, zones } from "@/lib/interface-map";
+import type { AxisDef, AxisValues } from "@/lib/axes";
 
 /** Keep markers at the poles fully inside the track instead of half-clipped. */
 const THUMB = 12;
@@ -9,17 +8,17 @@ const at = (t: number) => `calc(${THUMB / 2}px + ${t} * (100% - ${THUMB}px))`;
 
 interface Props {
   axis: AxisDef;
-  selected: Archetype;
-  compare: Archetype | null;
+  values: AxisValues;
+  compareValues: AxisValues | null;
+  color: string;
 }
 
-export function AxisSpectrum({ axis, selected, compare }: Props) {
-  const value = selected.values[axis.id];
-  const other = compare ? compare.values[axis.id] : null;
-  const color = zones[zoneOf(selected)].color;
+export function AxisSpectrum({ axis, values, compareValues, color }: Props) {
+  const value = values[axis.id];
+  const other = compareValues ? compareValues[axis.id] : null;
 
   return (
-    <div className="group py-2.5">
+    <div className="py-2.5">
       <div className="flex items-baseline justify-between gap-4">
         <span className="text-[13px] font-medium tracking-tight">{axis.name}</span>
         <span className="text-right text-[11px] leading-tight text-muted-foreground">

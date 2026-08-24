@@ -1,7 +1,8 @@
 "use client";
 
-import { archetypes, planeAxes, zoneOf, zones } from "@/lib/interface-map";
-import type { Archetype } from "@/lib/interface-map";
+import { planeAxes, zones } from "@/lib/axes";
+import { domains } from "@/lib/scenarios";
+import type { Scenario } from "@/lib/scenarios";
 import { cn } from "@/lib/utils";
 
 const PLOT = { x0: 88, y0: 76, x1: 612, y1: 600 };
@@ -9,7 +10,6 @@ const toX = (v: number) => 106 + v * 488;
 const toY = (v: number) => 92 + v * 468;
 const CX = toX(0.5);
 const CY = toY(0.5);
-
 const FRAME = { x0: 60, y0: 48, x1: 640, y1: 628 };
 
 const quadrantLabels = [
@@ -20,25 +20,23 @@ const quadrantLabels = [
 ] as const;
 
 interface Props {
-  selected: Archetype;
-  hovered: Archetype | null;
-  onSelect: (a: Archetype) => void;
-  onHover: (a: Archetype | null) => void;
+  items: Scenario[];
+  selected: Scenario;
+  hovered: Scenario | null;
+  onSelect: (s: Scenario) => void;
+  onHover: (s: Scenario | null) => void;
 }
 
-export function QuadrantMap({ selected, hovered, onSelect, onHover }: Props) {
-  const plotted = archetypes.filter((a) => !a.meta);
-  const metaOnes = archetypes.filter((a) => a.meta);
-
+export function PlaneMap({ items, selected, hovered, onSelect, onHover }: Props) {
   return (
     <svg
       viewBox="0 0 700 700"
       className="w-full select-none"
       role="img"
-      aria-label="Плоскость, заданная двумя главными осями: что делает пользователь и насколько открыто пространство вариантов"
+      aria-label="Плоскость: что делает пользователь по вертикали, открытость пространства вариантов по горизонтали"
     >
       <defs>
-        <clipPath id="plot-clip">
+        <clipPath id="plane-clip">
           <rect
             x={PLOT.x0}
             y={PLOT.y0}
@@ -57,21 +55,19 @@ export function QuadrantMap({ selected, hovered, onSelect, onHover }: Props) {
         height={FRAME.y1 - FRAME.y0}
         rx={16}
         fill="none"
-        stroke={zones.meta.color}
+        stroke="oklch(0.72 0.02 260)"
         strokeOpacity={0.35}
-        strokeWidth={1}
         strokeDasharray="3 6"
       />
-      <rect x={FRAME.x0 + 12} y={FRAME.y0 - 8} width={196} height={17} fill="var(--card)" />
+      <rect x={FRAME.x0 + 12} y={FRAME.y0 - 8} width={210} height={17} fill="var(--card)" />
       <text
         x={FRAME.x0 + 18}
         y={FRAME.y0 + 4}
         className="fill-muted-foreground font-mono text-[10px] tracking-[0.18em]"
       >
-        НАВИГАЦИЯ · МЕТА-СЛОЙ
+        НАВИГАЦИЯ · НАЛОГ НА РАЗМЕР
       </text>
 
-      {/* Plane */}
       <rect
         x={PLOT.x0}
         y={PLOT.y0}
@@ -79,42 +75,27 @@ export function QuadrantMap({ selected, hovered, onSelect, onHover }: Props) {
         height={PLOT.y1 - PLOT.y0}
         rx={10}
         className="fill-background stroke-border"
-        strokeWidth={1}
       />
 
-      <g clipPath="url(#plot-clip)">
-        <rect
-          x={PLOT.x0}
-          y={PLOT.y0}
-          width={CX - PLOT.x0}
-          height={CY - PLOT.y0}
-          fill={zones.observation.color}
-          fillOpacity={0.06}
-        />
-        <rect
-          x={CX}
-          y={PLOT.y0}
-          width={PLOT.x1 - CX}
-          height={CY - PLOT.y0}
-          fill={zones.exploration.color}
-          fillOpacity={0.06}
-        />
-        <rect
-          x={PLOT.x0}
-          y={CY}
-          width={CX - PLOT.x0}
-          height={PLOT.y1 - CY}
-          fill={zones.transaction.color}
-          fillOpacity={0.06}
-        />
-        <rect
-          x={CX}
-          y={CY}
-          width={PLOT.x1 - CX}
-          height={PLOT.y1 - CY}
-          fill={zones.generation.color}
-          fillOpacity={0.06}
-        />
+      <g clipPath="url(#plane-clip)">
+        {(
+          [
+            ["observation", PLOT.x0, PLOT.y0, CX - PLOT.x0, CY - PLOT.y0],
+            ["exploration", CX, PLOT.y0, PLOT.x1 - CX, CY - PLOT.y0],
+            ["transaction", PLOT.x0, CY, CX - PLOT.x0, PLOT.y1 - CY],
+            ["generation", CX, CY, PLOT.x1 - CX, PLOT.y1 - CY],
+          ] as const
+        ).map(([zone, x, y, w, h]) => (
+          <rect
+            key={zone}
+            x={x}
+            y={y}
+            width={w}
+            height={h}
+            fill={zones[zone].color}
+            fillOpacity={0.06}
+          />
+        ))}
 
         {[0.25, 0.75].map((t) => (
           <g key={t}>
@@ -138,7 +119,6 @@ export function QuadrantMap({ selected, hovered, onSelect, onHover }: Props) {
             />
           </g>
         ))}
-
         <line x1={CX} y1={PLOT.y0} x2={CX} y2={PLOT.y1} className="stroke-border" />
         <line x1={PLOT.x0} y1={CY} x2={PLOT.x1} y2={CY} className="stroke-border" />
       </g>
@@ -166,21 +146,10 @@ export function QuadrantMap({ selected, hovered, onSelect, onHover }: Props) {
         </g>
       ))}
 
-      {/* Pole labels sit outside the frame so the plane itself stays clean */}
-      <text
-        x={350}
-        y={26}
-        textAnchor="middle"
-        className="fill-muted-foreground font-mono text-[10px] tracking-[0.18em]"
-      >
+      <text x={350} y={26} textAnchor="middle" className="fill-muted-foreground font-mono text-[10px] tracking-[0.18em]">
         {planeAxes.y.poles[0].toUpperCase()}
       </text>
-      <text
-        x={350}
-        y={668}
-        textAnchor="middle"
-        className="fill-muted-foreground font-mono text-[10px] tracking-[0.18em]"
-      >
+      <text x={350} y={668} textAnchor="middle" className="fill-muted-foreground font-mono text-[10px] tracking-[0.18em]">
         {planeAxes.y.poles[1].toUpperCase()}
       </text>
       <text
@@ -202,88 +171,74 @@ export function QuadrantMap({ selected, hovered, onSelect, onHover }: Props) {
         {planeAxes.x.poles[1].toUpperCase()} ПРОСТРАНСТВО
       </text>
 
-      {plotted.map((a) => (
-        <Point
-          key={a.id}
-          archetype={a}
-          x={toX(a.values.openness)}
-          y={toY(a.values.mode)}
-          selected={selected.id === a.id}
-          hovered={hovered?.id === a.id}
-          onSelect={onSelect}
-          onHover={onHover}
-        />
-      ))}
-
-      {metaOnes.map((a) => (
-        <g key={a.id}>
-          <rect x={418} y={FRAME.y0 - 8} width={136} height={17} fill="var(--card)" />
-          <Point
-            archetype={a}
-            x={430}
-            y={FRAME.y0}
-            selected={selected.id === a.id}
-            hovered={hovered?.id === a.id}
+      {items.map((s) => {
+        const meta = s.meta;
+        const x = meta ? 470 : toX(s.values.openness);
+        const y = meta ? FRAME.y0 : toY(s.values.mode);
+        return (
+          <PlotDot
+            key={s.id}
+            scenario={s}
+            x={x}
+            y={y}
+            color={domains[s.domain].color}
+            selected={selected.id === s.id}
+            hovered={hovered?.id === s.id}
+            labelAnchor={x > 430 ? "end" : "start"}
             onSelect={onSelect}
             onHover={onHover}
           />
-        </g>
-      ))}
+        );
+      })}
     </svg>
   );
 }
 
-function Point({
-  archetype,
+export function PlotDot({
+  scenario,
   x,
   y,
+  color,
   selected,
   hovered,
+  labelAnchor,
   onSelect,
   onHover,
 }: {
-  archetype: Archetype;
+  scenario: Scenario;
   x: number;
   y: number;
+  color: string;
   selected: boolean;
   hovered: boolean;
-  onSelect: (a: Archetype) => void;
-  onHover: (a: Archetype | null) => void;
+  labelAnchor: "start" | "end";
+  onSelect: (s: Scenario) => void;
+  onHover: (s: Scenario | null) => void;
 }) {
-  const color = zones[zoneOf(archetype)].color;
   const active = selected || hovered;
-  const { anchor, dx, dy } = archetype.label;
 
   return (
     <g
       role="button"
       tabIndex={0}
-      aria-label={archetype.name}
+      aria-label={scenario.name}
       aria-pressed={selected}
       className="cursor-pointer outline-none"
-      onClick={() => onSelect(archetype)}
+      onClick={() => onSelect(scenario)}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
-          onSelect(archetype);
+          onSelect(scenario);
         }
       }}
-      onMouseEnter={() => onHover(archetype)}
+      onMouseEnter={() => onHover(scenario)}
       onMouseLeave={() => onHover(null)}
-      onFocus={() => onHover(archetype)}
+      onFocus={() => onHover(scenario)}
       onBlur={() => onHover(null)}
     >
       <circle cx={x} cy={y} r={16} fill="transparent" />
       {selected && (
-        <circle
-          cx={x}
-          cy={y}
-          r={13}
-          fill={color}
-          fillOpacity={0.14}
-          stroke={color}
-          strokeOpacity={0.55}
-        />
+        <circle cx={x} cy={y} r={13} fill={color} fillOpacity={0.14} stroke={color} strokeOpacity={0.55} />
       )}
       <circle
         cx={x}
@@ -292,19 +247,29 @@ function Point({
         fill={active ? color : "var(--background)"}
         stroke={color}
         strokeWidth={1.6}
-        strokeOpacity={active ? 1 : 0.7}
+        strokeOpacity={active ? 1 : 0.75}
       />
-      <text
-        x={x + dx}
-        y={y + dy}
-        textAnchor={anchor}
-        className={cn(
-          "text-[10.5px] transition-[fill]",
-          active ? "fill-foreground" : "fill-muted-foreground",
-        )}
-      >
-        {archetype.name}
-      </text>
+      {active && (
+        <>
+          <rect
+            x={labelAnchor === "start" ? x + 9 : x - 9 - scenario.name.length * 5.4}
+            y={y - 8}
+            width={scenario.name.length * 5.4 + 8}
+            height={16}
+            rx={3}
+            fill="var(--card)"
+            fillOpacity={0.92}
+          />
+          <text
+            x={labelAnchor === "start" ? x + 13 : x - 13}
+            y={y + 4}
+            textAnchor={labelAnchor}
+            className={cn("fill-foreground text-[10.5px]")}
+          >
+            {scenario.name}
+          </text>
+        </>
+      )}
     </g>
   );
 }
