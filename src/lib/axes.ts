@@ -151,7 +151,7 @@ export function extremeAxes(values: AxisValues, count = 4) {
     .slice(0, count);
 }
 
-/** Where two scenarios disagree most — usually why one mechanic fits and the other does not. */
+/** Where two patterns disagree most — usually why one mechanic fits and the other does not. */
 export function divergentAxes(a: AxisValues, b: AxisValues, count = 3) {
   return spectrumAxes
     .map((axis) => ({ axis, delta: Math.abs(a[axis.id] - b[axis.id]) }))

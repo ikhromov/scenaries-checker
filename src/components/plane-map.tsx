@@ -1,8 +1,7 @@
 "use client";
 
-import { planeAxes, zones } from "@/lib/axes";
-import { domains } from "@/lib/scenarios";
-import type { Scenario } from "@/lib/scenarios";
+import { planeAxes, zoneOf, zones } from "@/lib/axes";
+import type { Pattern } from "@/lib/patterns";
 import { cn } from "@/lib/utils";
 
 const PLOT = { x0: 88, y0: 76, x1: 612, y1: 600 };
@@ -20,11 +19,11 @@ const quadrantLabels = [
 ] as const;
 
 interface Props {
-  items: Scenario[];
-  selected: Scenario;
-  hovered: Scenario | null;
-  onSelect: (s: Scenario) => void;
-  onHover: (s: Scenario | null) => void;
+  items: Pattern[];
+  selected: Pattern;
+  hovered: Pattern | null;
+  onSelect: (p: Pattern) => void;
+  onHover: (p: Pattern | null) => void;
 }
 
 export function PlaneMap({ items, selected, hovered, onSelect, onHover }: Props) {
@@ -33,7 +32,7 @@ export function PlaneMap({ items, selected, hovered, onSelect, onHover }: Props)
       viewBox="0 0 700 700"
       className="w-full select-none"
       role="img"
-      aria-label="Плоскость: что делает пользователь по вертикали, открытость пространства вариантов по горизонтали"
+      aria-label="Плоскость паттернов: что делает пользователь по вертикали, открытость пространства по горизонтали"
     >
       <defs>
         <clipPath id="plane-clip">
@@ -47,7 +46,6 @@ export function PlaneMap({ items, selected, hovered, onSelect, onHover }: Props)
         </clipPath>
       </defs>
 
-      {/* Navigation is not a quadrant — it is the ring you pass through to reach one. */}
       <rect
         x={FRAME.x0}
         y={FRAME.y0}
@@ -171,69 +169,70 @@ export function PlaneMap({ items, selected, hovered, onSelect, onHover }: Props)
         {planeAxes.x.poles[1].toUpperCase()} ПРОСТРАНСТВО
       </text>
 
-      {items.map((s) => {
-        const meta = s.meta;
-        const x = meta ? 470 : toX(s.values.openness);
-        const y = meta ? FRAME.y0 : toY(s.values.mode);
+      {items.map((p) => {
+        const x = p.meta ? 455 : toX(p.values.openness);
+        const y = p.meta ? FRAME.y0 : toY(p.values.mode);
         return (
-          <PlotDot
-            key={s.id}
-            scenario={s}
+          <g key={p.id}>
+            {p.meta && (
+              <rect x={440} y={FRAME.y0 - 8} width={168} height={17} fill="var(--card)" />
+            )}
+            <PlotDot
+            pattern={p}
             x={x}
             y={y}
-            color={domains[s.domain].color}
-            selected={selected.id === s.id}
-            hovered={hovered?.id === s.id}
-            labelAnchor={x > 430 ? "end" : "start"}
+            color={zones[zoneOf(p.values)].color}
+            selected={selected.id === p.id}
+            hovered={hovered?.id === p.id}
             onSelect={onSelect}
             onHover={onHover}
           />
+          </g>
         );
       })}
     </svg>
   );
 }
 
-export function PlotDot({
-  scenario,
+function PlotDot({
+  pattern,
   x,
   y,
   color,
   selected,
   hovered,
-  labelAnchor,
   onSelect,
   onHover,
 }: {
-  scenario: Scenario;
+  pattern: Pattern;
   x: number;
   y: number;
   color: string;
   selected: boolean;
   hovered: boolean;
-  labelAnchor: "start" | "end";
-  onSelect: (s: Scenario) => void;
-  onHover: (s: Scenario | null) => void;
+  onSelect: (p: Pattern) => void;
+  onHover: (p: Pattern | null) => void;
 }) {
   const active = selected || hovered;
+  const { anchor, dx, dy } = pattern.label;
 
   return (
     <g
       role="button"
       tabIndex={0}
-      aria-label={scenario.name}
+      aria-label={pattern.name}
       aria-pressed={selected}
       className="cursor-pointer outline-none"
-      onClick={() => onSelect(scenario)}
+      onClick={() => onSelect(pattern)}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
-          onSelect(scenario);
+          onSelect(pattern);
         }
       }}
-      onMouseEnter={() => onHover(scenario)}
+      onMouseEnter={() => onHover(pattern)}
       onMouseLeave={() => onHover(null)}
-      onFocus={() => onHover(scenario)}
+      onFocus={() => onHover(pattern)}
       onBlur={() => onHover(null)}
     >
       <circle cx={x} cy={y} r={16} fill="transparent" />
@@ -249,27 +248,17 @@ export function PlotDot({
         strokeWidth={1.6}
         strokeOpacity={active ? 1 : 0.75}
       />
-      {active && (
-        <>
-          <rect
-            x={labelAnchor === "start" ? x + 9 : x - 9 - scenario.name.length * 5.4}
-            y={y - 8}
-            width={scenario.name.length * 5.4 + 8}
-            height={16}
-            rx={3}
-            fill="var(--card)"
-            fillOpacity={0.92}
-          />
-          <text
-            x={labelAnchor === "start" ? x + 13 : x - 13}
-            y={y + 4}
-            textAnchor={labelAnchor}
-            className={cn("fill-foreground text-[10.5px]")}
-          >
-            {scenario.name}
-          </text>
-        </>
-      )}
+      <text
+        x={x + dx}
+        y={y + dy}
+        textAnchor={anchor}
+        className={cn(
+          "text-[10.5px] transition-[fill]",
+          active ? "fill-foreground" : "fill-muted-foreground",
+        )}
+      >
+        {pattern.name}
+      </text>
     </g>
   );
 }
