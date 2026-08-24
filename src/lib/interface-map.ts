@@ -546,6 +546,33 @@ export const verdicts: Verdict[] = [
   },
 ];
 
+/** The coordinates that actually characterise an archetype — the ones furthest from neutral. */
+export function extremeAxes(a: Archetype, count = 4) {
+  return spectrumAxes
+    .map((axis) => {
+      const value = a.values[axis.id];
+      return {
+        axis,
+        value,
+        distance: Math.abs(value - 0.5),
+        pole: value >= 0.5 ? axis.poles[1] : axis.poles[0],
+      };
+    })
+    .sort((x, y) => y.distance - x.distance)
+    .slice(0, count);
+}
+
+/** Where two archetypes disagree most — usually the reason they feel like different products. */
+export function divergentAxes(a: Archetype, b: Archetype, count = 3) {
+  return spectrumAxes
+    .map((axis) => ({
+      axis,
+      delta: Math.abs(a.values[axis.id] - b.values[axis.id]),
+    }))
+    .sort((x, y) => y.delta - x.delta)
+    .slice(0, count);
+}
+
 export function verdictTone(value: number): {
   label: string;
   color: string;

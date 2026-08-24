@@ -8,6 +8,8 @@ import { VerdictPanel } from "@/components/verdict-panel";
 import { Card } from "@/components/ui/card";
 import {
   archetypes,
+  divergentAxes,
+  extremeAxes,
   loci,
   planeAxes,
   spectrumAxes,
@@ -130,13 +132,44 @@ export default function Home() {
           <p className="mt-3 text-[14px] leading-relaxed text-muted-foreground">
             {selected.blurb}
           </p>
-          {compare && (
-            <p className="mt-4 border-t border-border/60 pt-3 text-[13px] leading-relaxed text-muted-foreground">
-              <span className="font-mono text-[10px] tracking-wider text-muted-foreground/70">
-                СРАВНЕНИЕ ·{" "}
+
+          <p className="mt-5 font-mono text-[10px] tracking-[0.18em] text-muted-foreground/70">
+            ХАРАКТЕРНЫЕ КООРДИНАТЫ
+          </p>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {extremeAxes(selected).map(({ axis, pole }) => (
+              <span
+                key={axis.id}
+                className="inline-flex items-baseline gap-1.5 rounded-md border border-border/60 bg-muted/30 px-2 py-1 text-[11.5px]"
+              >
+                <span className="text-muted-foreground">{axis.name}</span>
+                <span className="font-medium">{pole}</span>
               </span>
-              {compare.name}: {compare.blurb}
-            </p>
+            ))}
+          </div>
+
+          {compare && (
+            <div className="mt-5 border-t border-border/60 pt-4">
+              <p className="font-mono text-[10px] tracking-[0.18em] text-muted-foreground/70">
+                СИЛЬНЕЕ ВСЕГО РАСХОДЯТСЯ С «{compare.name.toUpperCase()}»
+              </p>
+              <div className="mt-2 space-y-1.5">
+                {divergentAxes(selected, compare).map(({ axis, delta }) => (
+                  <div
+                    key={axis.id}
+                    className="flex items-baseline justify-between gap-3 text-[12.5px]"
+                  >
+                    <span>{axis.name}</span>
+                    <span className="font-mono text-[11px] text-muted-foreground tabular-nums">
+                      разрыв {Math.round(delta * 100)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-3 text-[12.5px] leading-relaxed text-muted-foreground">
+                {compare.blurb}
+              </p>
+            </div>
           )}
         </Card>
 

@@ -216,16 +216,18 @@ export function QuadrantMap({ selected, hovered, onSelect, onHover }: Props) {
       ))}
 
       {metaOnes.map((a) => (
-        <Point
-          key={a.id}
-          archetype={a}
-          x={430}
-          y={FRAME.y0}
-          selected={selected.id === a.id}
-          hovered={hovered?.id === a.id}
-          onSelect={onSelect}
-          onHover={onHover}
-        />
+        <g key={a.id}>
+          <rect x={418} y={FRAME.y0 - 8} width={136} height={17} fill="var(--card)" />
+          <Point
+            archetype={a}
+            x={430}
+            y={FRAME.y0}
+            selected={selected.id === a.id}
+            hovered={hovered?.id === a.id}
+            onSelect={onSelect}
+            onHover={onHover}
+          />
+        </g>
       ))}
     </svg>
   );
