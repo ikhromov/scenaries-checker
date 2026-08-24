@@ -43,7 +43,10 @@ export default function Home() {
         </p>
         <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
           Выберите архетип, чтобы увидеть его положение на всех осях сразу.
-          Наведите на второй — он ляжет призраком рядом для сравнения.
+          <span className="hidden sm:inline">
+            {" "}
+            Наведите на второй — он ляжет призраком рядом для сравнения.
+          </span>
         </p>
       </header>
 
@@ -86,13 +89,19 @@ export default function Home() {
             title="Две оси, на которых лежит классическая четвёрка"
             note={`${planeAxes.y.hint}. ${planeAxes.x.hint}.`}
           />
-          <div className="mt-2">
-            <QuadrantMap
-              selected={selected}
-              hovered={hovered}
-              onSelect={setSelected}
-              onHover={setHovered}
-            />
+          <p className="mt-2 text-[11px] text-muted-foreground/70 sm:hidden">
+            Плоскость прокручивается вбок.
+          </p>
+          {/* Below ~640px the labels shrink past legibility, so pan instead of scale. */}
+          <div className="mt-2 overflow-x-auto">
+            <div className="min-w-[640px]">
+              <QuadrantMap
+                selected={selected}
+                hovered={hovered}
+                onSelect={setSelected}
+                onHover={setHovered}
+              />
+            </div>
           </div>
         </Card>
 
