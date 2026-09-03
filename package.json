@@ -6,7 +6,8 @@
     "dev": "next dev --port 43127 --hostname 0.0.0.0",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "export:html": "node --experimental-strip-types scripts/export-diagnosis-html.ts"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",
